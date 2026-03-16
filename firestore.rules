@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: voters
+    // Fields:
+    //   - name: string (required)
+    //   - voterId: string (required)
+    //   - aadhar: string (required)
+    //   - photoBase64: string (required)
+    //   - hasVoted: boolean (required)
+    //   - createdAt: timestamp (optional)
+    //
+    // Collection: votes
+    // Fields:
+    //   - voterId: string (required)
+    //   - candidateId: string (required)
+    //   - timestamp: timestamp (required)
+    //
+    // Collection: security_logs
+    // Fields:
+    //   - timestamp: timestamp (required)
+    //   - type: string (required, enum: unknown_person, spoofing_attempt)
+    //   - screenshotBase64: string (required)
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return true; // Allow unauthenticated access for prototype
+    }
+
+    function isAdmin() {
+      return true; // Allow unauthenticated access for prototype
+    }
+
+    function isValidVoter(data) {
+      return data.keys().hasAll(['name', 'voterId', 'aadhar', 'photoBase64', 'hasVoted', 'faceTemplate']) &&
+             data.name is string && data.name.size() > 0 &&
+             data.voterId is string && data.voterId.size() > 0 &&
+             data.aadhar is string && data.aadhar.size() > 0 &&
+             data.photoBase64 is string &&
+             data.faceTemplate is string &&
+             data.hasVoted is bool &&
+             (!('location' in data) || (data.location == null || (data.location is map && data.location.latitude is number && data.location.longitude is number)));
+    }
+
+    match /voters/{voterId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidVoter(request.resource.data);
+      // Allow voters to update their own 'hasVoted' status when casting a vote
+      // This is a bit tricky without a specific voter login, but we'll assume 
+      // the app handles the verification and the admin or a secure process performs the update.
+      // For this prototype, we'll allow authenticated users to update 'hasVoted' if they are verified.
+      allow update: if isAuthenticated() && 
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hasVoted']) &&
+                    resource.data.hasVoted == false &&
+                    request.resource.data.hasVoted == true;
+    }
+
+    match /votes/{voteId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated(); // App logic ensures verification
+    }
+
+    match /security_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAdmin();
+    }
+  }
+}

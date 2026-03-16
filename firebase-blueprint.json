@@ -1,0 +1,77 @@
+{
+  "entities": {
+    "Voter": {
+      "title": "Voter",
+      "description": "A registered voter in the system.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Full name of the voter" },
+        "voterId": { "type": "string", "description": "Unique Voter ID number" },
+        "aadhar": { "type": "string", "description": "Aadhaar number for secondary verification" },
+        "photoBase64": { "type": "string", "description": "Base64 encoded photo of the voter" },
+        "faceTemplate": { "type": "string", "description": "Secure biometric template of the voter's face" },
+        "hasVoted": { "type": "boolean", "description": "Whether the voter has already cast their vote" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of registration" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "latitude": { "type": "number" },
+            "longitude": { "type": "number" }
+          },
+          "description": "Geolocation of the voter at the time of registration"
+        }
+      },
+      "required": ["name", "voterId", "aadhaarNumber", "photoBase64", "hasVoted"]
+    },
+    "Vote": {
+      "title": "Vote",
+      "description": "A cast vote record.",
+      "type": "object",
+      "properties": {
+        "voterId": { "type": "string", "description": "ID of the voter who cast the vote" },
+        "candidateId": { "type": "string", "description": "ID of the candidate voted for" },
+        "timestamp": { "type": "string", "format": "date-time", "description": "When the vote was cast" }
+      },
+      "required": ["voterId", "candidateId", "timestamp"]
+    },
+    "SecurityLog": {
+      "title": "Security Log",
+      "description": "Logs of security events like unknown persons or spoofing attempts.",
+      "type": "object",
+      "properties": {
+        "timestamp": { "type": "string", "format": "date-time", "description": "When the event occurred" },
+        "type": { "type": "string", "enum": ["unknown_person", "spoofing_attempt"], "description": "Type of security event" },
+        "screenshotBase64": { "type": "string", "description": "Base64 encoded screenshot of the event" }
+      },
+      "required": ["timestamp", "type", "screenshotBase64"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A user of the system, potentially an administrator.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "description": "Email address of the user" },
+        "role": { "type": "string", "enum": ["admin", "user"], "description": "Role of the user" }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "voters": {
+      "schema": "Voter",
+      "description": "Collection of registered voters"
+    },
+    "votes": {
+      "schema": "Vote",
+      "description": "Collection of cast votes"
+    },
+    "security_logs": {
+      "schema": "SecurityLog",
+      "description": "Collection of security event logs"
+    },
+    "users": {
+      "schema": "User",
+      "description": "Collection of system users and roles"
+    }
+  }
+}

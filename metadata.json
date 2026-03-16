@@ -1,0 +1,8 @@
+{
+  "name": "Copy of AI Voter Verification System",
+  "description": "A secure election system using facial recognition and liveness detection to prevent voter fraud.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
